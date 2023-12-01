@@ -29,6 +29,14 @@ public class ClientPacketListenerMixin {
                     Minecraft.getInstance().getMusicManager().stopPlaying();
                 }
             }
+        } else if(packet.operation.getType() == ClientboundBossEventPacket.OperationType.UPDATE_NAME) {
+            ClientboundBossEventPacket.UpdateNameOperation updateOperation = (ClientboundBossEventPacket.UpdateNameOperation) packet.operation;
+            if(updateOperation.name.getString().startsWith(Raid.RAID_NAME_COMPONENT.getString() + " - ")) {
+                if(Minecraft.getInstance().getMusicManager().isPlayingMusic(IllagerRaidMusic.RAID_MUSIC)) {
+                    IllagerRaidMusic.shouldPlayMusic = false;
+                    Minecraft.getInstance().getMusicManager().stopPlaying();
+                }
+            }
         }
     }
 }
