@@ -3,34 +3,23 @@ package com.gmail.picono435.illagerraidmusic;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.slf4j.Logger;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(IllagerRaidMusic.MODID)
@@ -39,7 +28,7 @@ public class IllagerRaidMusic {
     public static final String MODID = "illagerraidmusic";
     private static final Logger LOGGER = LogUtils.getLogger();
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MODID);
-    public static final RegistryObject<SoundEvent> RAID_SOUND_EVENT = SOUND_EVENTS.register("raid_music", () -> new SoundEvent(new ResourceLocation(MODID, "raid_music")));
+    public static final RegistryObject<SoundEvent> RAID_SOUND_EVENT = SOUND_EVENTS.register("raid_music", IllagerRaidMusic::getSoundEvent);
     public static Music RAID_MUSIC;
 
     public static boolean shouldPlayMusic;
@@ -64,7 +53,13 @@ public class IllagerRaidMusic {
         @SubscribeEvent
         public static void onClientSetup(TickEvent.ClientTickEvent event) {
             if(RAID_MUSIC == null) {
-                RAID_MUSIC = new Music(RAID_SOUND_EVENT.get(), 20, 40, true);
+                try {
+                    Constructor<Music> constructor = Music.class.getConstructor(SoundEvent.class, int.class, int.class, boolean.class);
+                    RAID_MUSIC = constructor.newInstance(RAID_SOUND_EVENT.get(), 20, 40, true);
+                } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                         InvocationTargetException exception) {
+                    RAID_MUSIC = new Music(RAID_SOUND_EVENT.getHolder().get(), 20, 40, true);
+                }
             }
 
 
@@ -83,6 +78,17 @@ public class IllagerRaidMusic {
                     Minecraft.getInstance().getMusicManager().stopPlaying();
                 }
             }
+        }
+    }
+
+    private static SoundEvent getSoundEvent() {
+        ResourceLocation resourceLocation = new ResourceLocation(MODID, "raid_music");
+        try {
+            // 1.19.2
+            Constructor<SoundEvent> constructor = SoundEvent.class.getConstructor(ResourceLocation.class);
+            return constructor.newInstance(resourceLocation);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException ex) {
+            return SoundEvent.createVariableRangeEvent(new ResourceLocation(MODID, "raid_music"));
         }
     }
 }
