@@ -31,7 +31,8 @@ public class ClientPacketListenerMixin {
             }
         } else if(packet.operation.getType() == ClientboundBossEventPacket.OperationType.UPDATE_NAME) {
             ClientboundBossEventPacket.UpdateNameOperation updateOperation = (ClientboundBossEventPacket.UpdateNameOperation) packet.operation;
-            if(updateOperation.name.getString().startsWith(Raid.RAID_NAME_COMPONENT.getString() + " - ")) {
+            if(updateOperation.name.getString().startsWith(Raid.RAID_NAME_COMPONENT.getString() + " - Victory") ||
+                    updateOperation.name.getString().startsWith(Raid.RAID_NAME_COMPONENT.getString() + " - Defeat")) {
                 if(Minecraft.getInstance().getMusicManager().isPlayingMusic(IllagerRaidMusic.RAID_MUSIC)) {
                     IllagerRaidMusic.shouldPlayMusic = false;
                     Minecraft.getInstance().getMusicManager().stopPlaying();
