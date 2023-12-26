@@ -23,6 +23,7 @@ public class ClientPacketListenerMixin {
                 IllagerRaidMusic.shouldPlayMusic = true;
             }
         } else if(packet.operation.getType() == ClientboundBossEventPacket.OperationType.REMOVE) {
+            if(Minecraft.getInstance().gui.getBossOverlay().events.get(packet.id) == null) return;
             if(Minecraft.getInstance().gui.getBossOverlay().events.get(packet.id).getName().getString().startsWith(Raid.RAID_NAME_COMPONENT.getString())) {
                 if(Minecraft.getInstance().getMusicManager().isPlayingMusic(IllagerRaidMusic.RAID_MUSIC)) {
                     IllagerRaidMusic.shouldPlayMusic = false;
